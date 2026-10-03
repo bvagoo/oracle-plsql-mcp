@@ -1,0 +1,29 @@
+# Local credentials and Oracle wallet files
+.env
+.env.*
+!.env.example
+oracle-wallet/
+*.sso
+*.p12
+*.jks
+*.kdb
+*.sth
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local editor and operating system files
+.DS_Store
+.idea/
+.vscode/
