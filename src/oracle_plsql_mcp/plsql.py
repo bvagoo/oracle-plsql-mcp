@@ -33,7 +33,10 @@ def symbol_declarations(source: str, symbol: str) -> list[dict]:
 
 def calls(source: str) -> Counter[str]:
     cleaned = scrub(source).upper()
-    ignored = {"IF", "ELSIF", "WHILE", "LOOP", "FOR", "CASE", "NVL", "TO_CHAR", "TO_DATE", "COUNT", "SUM", "MAX", "MIN", "SUBSTR", "RAISE", "RETURN", "OPEN", "CLOSE"}
+    # An INSERT target followed by a column list has the same shape as a call.
+    cleaned = re.sub(rf"\bINSERT\s+INTO\s+(?:{IDENTIFIER}\.)?{IDENTIFIER}(?=\s*\()",
+                     lambda match: " " * len(match.group(0)), cleaned)
+    ignored = {"IF", "ELSIF", "WHILE", "LOOP", "FOR", "CASE", "NVL", "TO_CHAR", "TO_DATE", "COUNT", "SUM", "MAX", "MIN", "SUBSTR", "RAISE", "RETURN", "OPEN", "CLOSE", "VALUES"}
     found = re.findall(rf"\b({IDENTIFIER})(?:\s*\.\s*({IDENTIFIER}))?\s*\(", cleaned)
     return Counter(".".join(part for part in pair if part) for pair in found if pair[-1] not in ignored and pair[0] not in ignored)
 

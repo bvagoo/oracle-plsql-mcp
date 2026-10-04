@@ -87,7 +87,8 @@ class PlsqlTools:
             raise ValueError("max_depth must be 0..10 and max_nodes 1..500.")
         actual_owner, root = owner_or_default(self.database, owner), normalize_identifier(object_name)
         queue, seen, edges, uncertain = deque([(root, 0)]), {root}, [], []
-        while queue and len(seen) < max_nodes:
+        truncated = False
+        while queue:
             current, depth = queue.popleft()
             try:
                 _, _, _, rows = self.routine_source(actual_owner, current)
@@ -101,9 +102,12 @@ class PlsqlTools:
                 simple = callee.rsplit(".", 1)[-1]
                 edges.append({"from": current, "to": callee, "resolution": "static lexical"})
                 if simple not in seen:
+                    if len(seen) >= max_nodes:
+                        truncated = True
+                        continue
                     seen.add(simple)
                     queue.append((simple, depth + 1))
-        return {"root": f"{actual_owner}.{root}", "nodes": sorted(seen), "edges": edges, "dynamic_sql": uncertain, "truncated": bool(queue)}
+        return {"root": f"{actual_owner}.{root}", "nodes": sorted(seen), "edges": edges, "dynamic_sql": uncertain, "truncated": truncated}
 
     def routine_data_access(self, object_name: str, owner: str | None = None, object_type: str | None = None) -> dict:
         actual_owner, name, typ, rows = self.routine_source(owner, object_name, object_type)
