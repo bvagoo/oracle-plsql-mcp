@@ -152,15 +152,15 @@ class MetadataTools:
     def view_details(self, view_name: str, owner: str | None = None) -> dict:
         """Return a view definition together with dictionary dependencies Oracle records for it."""
         actual_owner, view = owner_or_default(self.database, owner), normalize_identifier(view_name)
-        binds = {"owner": actual_owner, "view": view}
+        binds = {"owner": actual_owner, "view_name": view}
         definition = self.database.rows("""SELECT view_name, text, text_length, read_only
-            FROM all_views WHERE owner=:owner AND view_name=:view""", binds, 1)
+            FROM all_views WHERE owner=:owner AND view_name=:view_name""", binds, 1)
         columns = self.database.rows("""SELECT column_id, column_name, data_type, data_length,
                 data_precision, data_scale, nullable
-            FROM all_tab_columns WHERE owner=:owner AND table_name=:view ORDER BY column_id""", binds, 1000)
+            FROM all_tab_columns WHERE owner=:owner AND table_name=:view_name ORDER BY column_id""", binds, 1000)
         dependencies = self.database.rows("""SELECT referenced_owner, referenced_name, referenced_type,
                 dependency_type FROM all_dependencies
-            WHERE owner=:owner AND name=:view AND type='VIEW'
+            WHERE owner=:owner AND name=:view_name AND type='VIEW'
             ORDER BY referenced_owner, referenced_name, referenced_type""", binds, 1000)
         return {"owner": actual_owner, "view_name": view,
                 "view": definition[0] if definition else None, "columns": columns,
